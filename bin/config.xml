@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<config>
+	<app>
+		<log>
+			<logError>1</logError>
+			<logWarning>1</logWarning>
+			<logInfo>1</logInfo>
+			<logDebug>1</logDebug>
+			<logError>1</logError>
+			<traceAll>1</traceAll>
+		</log>
+		<locale>
+			<path>assets/locale/</path>
+			<default>de</default>
+			<valid>de,en</valid>
+		</locale>
+		<assets>
+			<path>assests/</path>
+		</assets>
+		<update>
+			<url>http://nodebox.local/updater/update.xml</url>
+		</update>
+		<dynamicProps>
+			<prop id="spark.WindowedApplication.frameRate">20</prop>
+			<prop id="spark.WindowedApplication.backgroundFrameRate">1</prop>
+		</dynamicProps>
+	</app>
+	<dataProviders>
+		<dropbox>
+			<appKey>5pagtowjbkctwhn</appKey>
+			<appSecret>5fh7x69399xysm1</appSecret>
+		</dropbox>
+	</dataProviders>
+</config>

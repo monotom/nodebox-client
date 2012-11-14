@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Image xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 rollOver="imgRollOverHandler(event);"
+		 rollOut="imgRollOutHandler(event);" 
+		 buttonMode="true">
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.filters.GlowFilter;
+		 
+			public var hoverColor:Number = 0xeeeeee;					
+			protected function imgRollOverHandler(evt:MouseEvent = null):void {		
+				var tmpFilter:Array = filters;
+				filters[filters.length] = new GlowFilter( hoverColor, 0.7, 6, 6, 1, 4, true);
+				filters = tmpFilter;
+			}
+			
+			protected function imgRollOutHandler(evt:MouseEvent = null):void {
+				filters = [];
+			}
+		]]>
+	</fx:Script>	
+</mx:Image>
