@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<sdComponents:SDButton xmlns:fx="http://ns.adobe.com/mxml/2009" 
+<mui:Button xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		 xmlns:s="library://ns.adobe.com/flex/spark" 
 		 xmlns:mx="library://ns.adobe.com/flex/mx"
-		 xmlns:sdComponents="m.nodebox.ui.components.*"
+		 xmlns:mui="m.ui.components.*"
 		 rollOver="imgRollOverHandler(event);"
 		 rollOut="imgRollOutHandler(event);" 
 		 click="toggeStateHandler(event);"
@@ -38,4 +38,4 @@
 			}			
 		]]>
 	</fx:Script>	
-</sdComponents:SDButton>
+</mui:Button>

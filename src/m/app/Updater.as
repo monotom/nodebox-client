@@ -6,8 +6,6 @@ package m.app{
 	import air.update.ApplicationUpdaterUI;
 	import air.update.events.UpdateEvent;
 	import flash.events.ErrorEvent;
-	import m.nodebox.App;
-	import m.nodebox.app.Config;
 	
 	public class Updater {
 		private var appOnError:Function;

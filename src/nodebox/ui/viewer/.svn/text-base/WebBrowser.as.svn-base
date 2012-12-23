@@ -1,0 +1,15 @@
+package sd.ui.viewer
+{
+	import sd.app.DesktopElement;
+	import sd.ui.ChildWindowClass;
+
+	public class WebBrowser extends ChildWindowClass
+	{
+		private var desktopElement:DesktopElement;
+		
+		public function WebBrowser(desktopElement:DesktopElement):void
+		{
+			this.desktopElement = desktopElement;
+		}
+	}
+}

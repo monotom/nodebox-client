@@ -7,9 +7,9 @@
 :: NOTICE: all paths are relative to project root
 
 :: Your certificate information
-set CERT_NAME="NodeBoxClient"
-set CERT_PASS=nodebox
-set CERT_FILE="bat\NodeBoxClient.p12"
+set CERT_NAME="NodeboxClient"
+set CERT_PASS=fd
+set CERT_FILE="bat\NodeboxClient.p12"
 set SIGNING_OPTIONS=-storetype pkcs12 -keystore %CERT_FILE% -storepass %CERT_PASS%
 
 :: Application descriptor
@@ -20,11 +20,11 @@ set APP_DIR=bin
 set FILE_OR_DIR=-C %APP_DIR% .
 
 :: Your application ID (must match <id> of Application descriptor)
-set APP_ID=NodeBoxClient
+set APP_ID=nodebox.NodeboxClient
 
 :: Output
 set AIR_PATH=air
-set AIR_NAME=NodeBoxClient
+set AIR_NAME=NodeboxClient
 
 
 :validation

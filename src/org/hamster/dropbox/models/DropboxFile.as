@@ -1,5 +1,6 @@
 package org.hamster.dropbox.models
 {
+	import nodebox.App;
 	/**
 	 * either a dropbox file or a dropbox folder.
 	 * 
@@ -34,26 +35,38 @@ package org.hamster.dropbox.models
 		 * @param result
 		 */
 		override public function decode(result:Object):void
-		{
+		{	
 			super.decode(result);
-			//TODO commented lines sometime not present folder/file?
-			//this.thumbExists = String(result['thumb_exists']) == 'true';
+				
+			if(result.hasOwnProperty('thumb_exists'))
+				this.thumbExists = String(result['thumb_exists']) == 'true';
+			else
+				this.thumbExists = false;
+				
 			this.bytes = result['bytes'];
 			this.modified = new Date(result['modified']);
-			//this.isDir = String(result['is_dir']) == 'true';
+			if(result.hasOwnProperty('is_dir'))
+				this.isDir = String(result['is_dir']) == 'true';
+			else
+				this.isDir = false;
+				
 			this.icon = result['icon'];
 			this.root = result['root'];
-			//this.mimeType = result['mime_type'];
+			if(result.hasOwnProperty('mime_type'))
+				this.mimeType = result['mime_type'];
+				
 			this.size = result['size'];
 			this.path = result['path'];
 			this.rev = result['rev'];
 			this.revision = result['revision'];
-			//this.isDeleted = result['is_deleted'];
-			
+			if(result.hasOwnProperty('is_deleted'))
+				this.isDeleted = result['is_deleted'];
+			else
+				this.isDeleted = false;
 			this.hash = result['hash'];
 			
 			this.contents = new Array();
-			for each (var content:Object in result['contents']) {
+			for each (var content:Object in result['contents']) {	
 				var subFile:DropboxFile = new DropboxFile();
 				subFile.decode(content);
 				this.contents.push(subFile);

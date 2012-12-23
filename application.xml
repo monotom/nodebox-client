@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8" ?> 
 <application xmlns="http://ns.adobe.com/air/application/3.1"> 
 	
-	<id>NodeBoxClient</id> 
-	<versionNumber>0.1.0</versionNumber> 
-	<filename>NodeBoxClient</filename> 
+	<id>nodebox.NodeboxClient</id> 
+	<versionNumber>1.0</versionNumber> 
+	<filename>NodeboxClient</filename> 
 	
-	<name>NodeBoxClient</name> 
+	<name>NodeboxClient</name> 
 	<description></description> 
 	<copyright></copyright> 
 	
 	<initialWindow> 
-		<title>NodeBoxClient</title> 
-		<content>NodeBoxClient.swf</content> 
+		<title>NodeboxClient</title> 
+		<content>NodeboxClient.swf</content> 
 		<systemChrome>standard</systemChrome> 
 		<transparent>false</transparent> 
 		<visible>true</visible> 
@@ -20,4 +20,8 @@
 		<resizable>true</resizable> 
 	</initialWindow> 
 	
+	<!-- 
+	More options:
+	http://livedocs.adobe.com/flex/3/html/File_formats_1.html#1043413
+	-->
 </application>

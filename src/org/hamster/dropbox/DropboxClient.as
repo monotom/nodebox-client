@@ -2,6 +2,7 @@ package org.hamster.dropbox
 {
 	
 	import com.adobe.serialization.json.JSON;
+	import nodebox.App;
 	
 	import flash.errors.IOError;
 	import flash.events.Event;
@@ -581,10 +582,11 @@ package org.hamster.dropbox
 								parent_rev:String = "",
 								root:String = DropboxConfig.DROPBOX):URLLoader
 		{
-			var url:String = this.buildFullURL(config.contentServer, OAuthHelper.encodeURL('/files_put/' + root + '/' + filePath + '/' + fileName), "https");
+			var subPath:String = filePath.length < 1 ? fileName : filePath + fileName;
+			var url:String = this.buildFullURL(config.contentServer, OAuthHelper.encodeURL('/files_put/' + root + '/' + subPath), "https");
 			var params:Object = { 
 			};
-			
+			App.instance.logger.info(url);
 			//added in version 1
 			buildOptionalParameters(params, 'locale', locale);
 			params.overwrite = overwrite.toString();

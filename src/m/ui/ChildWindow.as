@@ -3,35 +3,22 @@ package m.ui {
 	 * ...
 	 * @author Tom Hanoldt
 	 */
-	import flash.display.Sprite;
-	import m.ui.components.Button;
-	import mx.binding.utils.BindingUtils;
-	import mx.containers.HBox;
-	import mx.controls.scrollClasses.ScrollBar;
-	import mx.core.FlexSprite;
-	import mx.core.UIComponent;
-	import spark.components.Scroller;
-	
 	import flash.display.DisplayObject;
 	import flash.events.Event;
-	import mx.events.CloseEvent;
 	import flash.events.MouseEvent;
-	
-	import mx.core.IFlexDisplayObject;
+	import flash.geom.Rectangle;
+	import m.ui.components.Button;
+	import mx.containers.Box;
+	import mx.core.FlexGlobals;
 	import mx.core.IVisualElement;
+	import mx.events.CloseEvent;
 	import mx.managers.PopUpManager;
-	
-	import spark.components.Group;
-	import spark.components.Label;
 	import spark.components.TitleWindow;
-	
-	//import m.ui.skins.ResizableTitleWindowSkin;
-	
+
 	public class ChildWindow extends TitleWindow{
-		public var statusLabel:Label        = new Label(); 			
 		public var minimizeButton:Button = new Button();
 		public var resizeButton:Button   = new Button();
-		public var content:Group	   		= new Group();
+		public var content:Box 		     = new Box();
 		
 		private var oldHeight:Number;
 		private var oldWidth:Number;
@@ -43,11 +30,12 @@ package m.ui {
 		public function ChildWindow(){
 			super();	
 			minHeight = 150;
-			//content.clipAndEnableScrolling = true;
-			//setStyle("skinClass", ResizableTitleWindowSkin);
 		}
 		
 		public function show(parent:DisplayObject = null, center:Boolean = true, modal:Boolean = false):void {
+			if (parent == null)
+				parent = FlexGlobals.topLevelApplication as DisplayObject;	
+				
 			PopUpManager.addPopUp(this, parent, modal);
 			if (center)
 				PopUpManager.centerPopUp(this);
@@ -57,18 +45,31 @@ package m.ui {
 			PopUpManager.removePopUp(this);
 		}
 		
+		[ArrayElementType("mx.core.IVisualElement")]
+		override public function set mxmlContent(value:Array):void {
+			_mxmlContent = value;
+		}
+		private var _mxmlContent:Array;
+
+		private var _scrollRect:Rectangle;
 		override protected function createChildren():void {			
 			super.createChildren();
 			
-			//add view elements
-			super.addElement(statusLabel);
+			if( _mxmlContent != null ) {
+				for (var i:int = 0; i < _mxmlContent.length; i++) {   
+					var elt:IVisualElement = _mxmlContent[i];
+					addElement(elt);
+				}
+			}
+			
 			super.addElement(minimizeButton);
 			super.addElement(resizeButton);
+			super.addElement(content);
 			
-			var scroller:HBox = new HBox();
-			scroller.addElement(content);
-			
-			super.addElement(scroller);
+			_scrollRect = new Rectangle(0, 0, width, height);		
+			content.scrollRect = _scrollRect;
+			content.width = width;
+			content.height = height - 19;
 			
 			content.setStyle("height", "100%");	
 			content.setStyle("width", "100%");	
@@ -78,19 +79,6 @@ package m.ui {
 			content.setStyle("paddingLeft", "10");	
 			
 			setStyle("cornerRadius", 10);
-			
-			//init child status label
-			statusLabel.setStyle("backgroundColor", "#BCBCBC");
-			statusLabel.setStyle("paddingLeft", 3);
-			statusLabel.setStyle("paddingRight", 3);
-			statusLabel.setStyle("paddingTop", 3);
-			statusLabel.setStyle("paddingBottom", 3);
-			statusLabel.setStyle("fontSize", 14);
-			statusLabel.percentWidth = 100;
-			statusLabel.text = "status: init";
-			statusLabel.bottom = 0;
-			statusLabel.left = 0;
-			statusLabel.height = 20;
 			
 			//init child minimize AppButton
 			minimizeButton.right = 25;
@@ -102,7 +90,7 @@ package m.ui {
 			minimizeButton.addEventListener(MouseEvent.MOUSE_UP, onMinimize);
 			
 			//init child resize AppButton
-			resizeButton.right = 0;
+			resizeButton.right = 10;
 			resizeButton.height = 20;
 			resizeButton.width = 20;
 			resizeButton.height = 20;
@@ -126,16 +114,6 @@ package m.ui {
 		override public function get title():String{
 			//strip window title and return
 			return super.title ? super.title.replace(/^\s+|\s+$/gs, '') : ""; 
-		}
-		
-		public function set status(msg:String):void{
-			//set text in status label of child
-			statusLabel.text = "status: " + msg;
-		}
-		
-		public function get status():String{
-			//return status text
-			return statusLabel.text;
 		}
 		
 		protected function onMinimize(event:MouseEvent = null):void {
@@ -192,8 +170,12 @@ package m.ui {
 			oldMouseX = event.stageX;
 			oldMouseY = event.stageY;
 			
-			this.invalidateDisplayList();
-			this.invalidateSize();
+			_scrollRect.width = width;
+			_scrollRect.height = height;
+			content.scrollRect = _scrollRect;
+			
+			content.width = width;
+			content.height = height - 19;
 		}
 		
 		protected function onResizeStop(event:MouseEvent):void {				
@@ -206,12 +188,12 @@ package m.ui {
 			close();
 		}
 		
-		override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
-			super.updateDisplayList(unscaledWidth, unscaledHeight-this.statusLabel.height);
+		override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+			super.updateDisplayList(unscaledWidth, unscaledHeight);
 		}
 		
 		//override add Element functions, so content is placed in content
-		override public function addElement(element:IVisualElement):IVisualElement{
+		override public function addElement(element:IVisualElement):IVisualElement {
 			return content.addElement(element);
 		}
 		

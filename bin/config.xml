@@ -15,7 +15,7 @@
 			<valid>de,en</valid>
 		</locale>
 		<assets>
-			<path>assests/</path>
+			<path>assets/</path>
 		</assets>
 		<update>
 			<url>http://nodebox.local/updater/update.xml</url>
@@ -27,8 +27,15 @@
 	</app>
 	<dataProviders>
 		<dropbox>
+			<basepath>TODO</basepath>
 			<appKey>5pagtowjbkctwhn</appKey>
 			<appSecret>5fh7x69399xysm1</appSecret>
+			<!--appKey>65faoqu40rczjsn</appKey>
+			<appSecret>hxylk48xhkwixwv</appSecret-->
 		</dropbox>
+		<nodebox>
+			<server>192.168.11.3</server>
+			<port>8881</port>
+		</nodebox>
 	</dataProviders>
 </config>

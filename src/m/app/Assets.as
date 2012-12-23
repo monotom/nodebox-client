@@ -1,6 +1,6 @@
 package m.app {
-	import flash.filesystem.File;
 	import flash.events.Event;
+	import flash.filesystem.File;
 	import mx.core.BitmapAsset;
 	import spark.components.Image;
 	/**
@@ -11,8 +11,8 @@ package m.app {
 		private var assetsPath:String;
 		private var imagePath:String;
 		public function Assets(assetsPath:String) {
-			this.assetsPath = assetsPath;
-			this.imagePath = assetsPath+'img';
+			this.assetsPath = File.applicationDirectory.resolvePath(assetsPath).nativePath;
+			this.imagePath = this.assetsPath+File.separator+'img'+File.separator;
 		}
 		
 		private var imageCache:Object = new Object();
@@ -30,7 +30,7 @@ package m.app {
 		}
 		
 		public function getImagePath(relativePath:String):String {
-			return imagePath + relativePath;
+			return File.applicationDirectory.resolvePath(imagePath + relativePath).nativePath;
 		}
 		
 		[Embed(source="../../../bin/assets/img/mime/binary.png")]

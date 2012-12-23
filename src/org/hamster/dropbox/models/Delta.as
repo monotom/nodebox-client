@@ -13,7 +13,6 @@ package org.hamster.dropbox.models
 		public var cursor:String;
 		public var has_more:Boolean;
 		
-		
 		public function Delta()
 		{
 			super();

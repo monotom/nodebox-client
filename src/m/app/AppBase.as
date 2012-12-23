@@ -26,7 +26,7 @@ package m.app{
 		}
 		
 		public static function getConfig():Object {
-				return AppConfig;
+			return AppConfig;
 		}
 		
 		protected function setupConfig():void {
