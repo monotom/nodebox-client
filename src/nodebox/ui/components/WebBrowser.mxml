@@ -2,7 +2,7 @@
 <mui:WebBrowserWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
                xmlns:s="library://ns.adobe.com/flex/spark" 
                xmlns:mx="library://ns.adobe.com/flex/mx"
-			   xmlns:mui="nodebox.ui.viewer.*"
+			   xmlns:mui="nodebox.ui.windows.*"
 			   width="800" height="600">
 	
 	<mx:VBox>

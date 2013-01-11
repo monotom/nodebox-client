@@ -1,7 +1,8 @@
 package nodebox.io {
 	import flash.events.Event;
 	/**
-	 * ...
+	 * This class extends the flash.events.Event class and adds io relatet event types.
+	 * 
 	 * @author Tom Hanoldt
 	 */
 	public class IOEvent extends Event{
@@ -22,9 +23,20 @@ package nodebox.io {
 		public static const ON_FILE_INFO_RESPONSE:String 	= 'io.file.info.response';
 		public static const ON_FILE_SYNCING:String 	= 'io.file.syncing';
 		public static const ON_FILE_SYNCED:String 	= 'io.file.synced';
+		public static const ON_FILE_UNSYNCED:String 	= 'io.file.unsynced';
 		
 		
 		public var item:Item;
+		/** 
+		 * Constructor. Extends the Event object with a generic data property.
+		 * 
+		 * @param type The event type.
+		 * @param item the logical item the event is related to. @see nodebox.io.Item
+		 * @param bubbles Effects the mechanism the event is distributet.
+		 * @param canelable Defines if the event can be canceled.
+		 * 
+		 * @return void
+		 */
 		public function IOEvent(type:String, item:Item = null, bubbles:Boolean = false, cancelable:Boolean = false) {
 			super(type, bubbles, cancelable);
 			this.item = item;

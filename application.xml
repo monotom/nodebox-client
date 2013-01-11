@@ -1,27 +1,22 @@
 <?xml version="1.0" encoding="utf-8" ?> 
 <application xmlns="http://ns.adobe.com/air/application/3.1"> 
 	
+	<name>Nodebox-Client</name> 
 	<id>nodebox.NodeboxClient</id> 
 	<versionNumber>1.0</versionNumber> 
-	<filename>NodeboxClient</filename> 
 	
-	<name>NodeboxClient</name> 
-	<description></description> 
-	<copyright></copyright> 
+	<filename>Nodebox-Client</filename> 
+	<description>The Nodebox Client connects to Dropbox and other storage hoster.</description> 
 	
 	<initialWindow> 
-		<title>NodeboxClient</title> 
+		<title>Nodebox-Client</title> 
 		<content>NodeboxClient.swf</content> 
-		<systemChrome>standard</systemChrome> 
-		<transparent>false</transparent> 
-		<visible>true</visible> 
-		<minimizable>true</minimizable> 
-		<maximizable>true</maximizable> 
-		<resizable>true</resizable> 
 	</initialWindow> 
 	
-	<!-- 
-	More options:
-	http://livedocs.adobe.com/flex/3/html/File_formats_1.html#1043413
-	-->
+	<icon>
+        <image16x16>assets/img/app/smallIcon.png</image16x16>
+        <image32x32>assets/img/app/mediumIcon.png</image32x32>
+        <image48x48>assets/img/app/bigIcon.png</image48x48>
+    </icon>
+	
 </application>

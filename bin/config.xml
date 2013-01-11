@@ -9,30 +9,29 @@
 			<logError>1</logError>
 			<traceAll>1</traceAll>
 		</log>
-		<locale>
-			<path>assets/locale/</path>
-			<default>de</default>
-			<valid>de,en</valid>
-		</locale>
 		<assets>
 			<path>assets/</path>
 		</assets>
-		<update>
-			<url>http://nodebox.local/updater/update.xml</url>
-		</update>
-		<dynamicProps>
-			<prop id="spark.WindowedApplication.frameRate">20</prop>
-			<prop id="spark.WindowedApplication.backgroundFrameRate">1</prop>
-		</dynamicProps>
+		<updater>
+			<url>http://nodebox.tomhanoldt.info/public/download/update.xml</url>
+		</updater>
+		<helpLink>http://nodebox.tomhanoldt.info/faq.html</helpLink>
+		<colors>
+			<desktopBgColor>a29c9c</desktopBgColor>
+			<itemTextColor>dfdff3</itemTextColor>	
+			<itemBgColor>7070ca</itemBgColor>
+			<itemBorderColor>232372</itemBorderColor>	
+		</colors>
+		<syncRootFolderIntervallMs>1000</syncRootFolderIntervallMs>
 	</app>
 	<dataProviders>
 		<dropbox>
 			<basepath>TODO</basepath>
-			<appKey></appKey>
-			<appSecret></appSecret>
+			<appKey>INSERT</appKey>
+			<appSecret>INSERT</appSecret>
 		</dropbox>
 		<nodebox>
-			<server>192.168.11.3</server>
+			<server>https://nodebox.privatedns.org</server>
 			<port>8881</port>
 		</nodebox>
 	</dataProviders>

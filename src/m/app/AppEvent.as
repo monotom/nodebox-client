@@ -1,7 +1,8 @@
 package m.app {
 	import flash.events.Event;
 	/**
-	 * ...
+	 * This class extends the flash.events.Event class and adds application relatet event types
+	 * 
 	 * @author Tom Hanoldt
 	 */
 	public class AppEvent extends Event{
@@ -16,6 +17,16 @@ package m.app {
 		public static const ON_APP_LOGGER:String 		= 'app.logger';
 		
 		public var data:*;
+		/** 
+		 * Constructor. Extends the Event object with a generic data property.
+		 * 
+		 * @param type The event type.
+		 * @param data Generic data for use inside the application.
+		 * @param bubbles Effects the mechanism the event is distributet.
+		 * @param canelable Defines if the event can be canceled.
+		 * 
+		 * @return void
+		 */
 		public function AppEvent(type:String, data:* = null, bubbles:Boolean = false, cancelable:Boolean = false) {
 			super(type, bubbles, cancelable);
 			this.data = data;

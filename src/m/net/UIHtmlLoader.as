@@ -11,8 +11,6 @@ package m.net{
 	[Event(name="complete")]
 
 	/**
-	 * UIHtmlLoader
-	 * 
 	 * HTMLLoader wrapper class because HTML loader does not implement IUIComponent
 	 */
 	public class UIHtmlLoader extends UIComponent{
@@ -63,15 +61,21 @@ package m.net{
 		
 		/**
 		 * re-dispatch bubbling event
+		 * 
+		 * @param e Compleete event.
+		 * 
+		 * @return void.
 		 */
 		private function completeHandler(event:Event) : void{
 			dispatchEvent(new Event(Event.COMPLETE));
 		}
 		
 		/**
+		 * Load a url Request with this loader.
 		 * 
-		 * @param request
+		 * @param request The request to load.
 		 * 
+		 * @return void.
 		 */		
 		public function load(request:URLRequest) : void{
 			if(htmlLoader == null)

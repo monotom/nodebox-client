@@ -1,6 +1,7 @@
 package m.app {
 	/**
-	 * ...
+	 * This class handles access to the application config and loading of a config file.
+	 * 
 	 * @author Tom Hanoldt
 	 */
 	import flash.events.Event;
@@ -10,10 +11,7 @@ package m.app {
 	
 	public class AppConfig {
 		public static var configXml:File = File.applicationDirectory.resolvePath('config.xml');
-		
-	//UPDATER		
-		public static var updateUrl:String = 'http://localhost/updater/update.xml';
-		
+			
 	//LOGGING
 		public static var logErro:int 		= 1; //1
 		public static var logInfo:int 		= 0; //8
@@ -24,12 +22,15 @@ package m.app {
 	//IMAGES
 		public static var assetsPath:String = 'assets/'
 	
-	//TRANSLATION
-		public static var localePath:String = 'assets/locale/';
-		public static var validLocals:Array = new Array('de');
-		public static var defaultLocale:String = 'de';
-		
 		protected static var onConfigLoadedCallback:Function = null;
+		/** 
+		 * This method starts the loading of a config xml file
+		 * 
+		 * @param path Path to the config xml file.
+		 * @param callback Method that is called after config file is loaded.
+		 * 
+		 * @return void
+		 */
 		public static function loadXml(path:String, callback:Function = null):void {
 			onConfigLoadedCallback = callback;
 			var xmlLoader:URLLoader = new URLLoader();
@@ -37,38 +38,30 @@ package m.app {
 			xmlLoader.load(new URLRequest(File.applicationDirectory.resolvePath(path).url));
 		}
 		
-		protected static var config:XML;
+		public static var xml:XML;
+		/** 
+		 * Internal callback after config xml file is loaded.
+		 * 
+		 * @param e The loaded event.
+		 * 
+		 * @return void
+		 */
 		protected static function configLoaded(e:Event):void {
 			XML.ignoreWhitespace = true;
-			config = new XML(e.target.data);
-			
-			updateUrl = config.app.update.url.text();
-			
+			xml = new XML(e.target.data);
+						
 			//LOGGING
-				if(config.app.log.logError.text() 	== '1')	logErro 	= 1; 	//1
-				if(config.app.log.logInfo.text() 	== '1')	logInfo 	= 8; 	//8
-				if(config.app.log.logWarning.text() == '1')	logWarning 	= 4;	//4
-				if(config.app.log.logDebug.text() 	== '1')	logDebug 	= 16; 	//16
-				if(config.app.log.traceAll.text() 	== '1')	traceAll 	= 2;	//2
+				if(xml.app.log.logError.text() 	== '1')	logErro 	= 1; 	//1
+				if(xml.app.log.logInfo.text() 	== '1')	logInfo 	= 8; 	//8
+				if(xml.app.log.logWarning.text() == '1')logWarning 	= 4;	//4
+				if(xml.app.log.logDebug.text() 	== '1')	logDebug 	= 16; 	//16
+				if(xml.app.log.traceAll.text() 	== '1')	traceAll 	= 2;	//2
 				
 			//ASSETS
-				assetsPath = config.app.assets.path.text();
-			
-			//TRANSLATION
-				localePath = config.app.locale.path.text();
-				validLocals= (''+config.app.locale.valid.text()).split(',');
-				defaultLocale = config.app.locale.default.text();
-				
-				if (onConfigLoadedCallback != null)
-					onConfigLoadedCallback();
-		}
+				assetsPath = xml.app.assets.path.text();
 		
-		public static function get():XML {
-			return config;
-		}
-		
-		public static function getString(section:String, key:String = null):String {
-			return (key == null) ? config[section].text() : config[section][key].text(); 
+			if (onConfigLoadedCallback != null)
+				onConfigLoadedCallback();
 		}
 	}
 }

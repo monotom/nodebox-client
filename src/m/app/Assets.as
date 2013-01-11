@@ -4,18 +4,34 @@ package m.app {
 	import mx.core.BitmapAsset;
 	import spark.components.Image;
 	/**
-	 * ...
+	 * This class handles basic access of application related resources like images etc.
+	 * 
 	 * @author Tom Hanoldt
 	 */
 	public class Assets {
 		private var assetsPath:String;
 		private var imagePath:String;
+		/** 
+		 * Constructor.
+		 * 
+		 * @param assetPath Basepath of the asset folder.
+		 * 
+		 * @return void
+		 */
 		public function Assets(assetsPath:String) {
 			this.assetsPath = File.applicationDirectory.resolvePath(assetsPath).nativePath;
 			this.imagePath = this.assetsPath+File.separator+'img'+File.separator;
 		}
 		
 		private var imageCache:Object = new Object();
+		/** 
+		 * This method creates or uses a cached imaage object.
+		 * 
+		 * @param relativePath The relative path inside of the assets folder.
+		 * @param callback Optional callback method called after image content was loaded.
+		 * 
+		 * @return Image The image object.
+		 */
 		public function getImage(relativePath:String, callback:Function = null):Image {
 			var path:String = getImagePath(relativePath);
 			if (imageCache.hasOwnProperty(path))
@@ -29,6 +45,13 @@ package m.app {
 			return imageCache[path];
 		}
 		
+		/** 
+		 * This method returns the path of a image inside the assets folder.
+		 * 
+		 * @param relativePath The relative path inside of the assets folder.
+		 * 
+		 * @return String Full path inside the assets folder.
+		 */
 		public function getImagePath(relativePath:String):String {
 			return File.applicationDirectory.resolvePath(imagePath + relativePath).nativePath;
 		}
@@ -57,6 +80,13 @@ package m.app {
 		[Embed(source="../../../bin/assets/img/mime/text.png")]
 		public static var TextItemPicture:Class;		
 		
+		/** 
+		 * This method tries to find a standart image representing the type of an image based on the file extension.
+		 * 
+		 * @param extension The extension of the file.
+		 * 
+		 * @return BitmapAsset 
+		 */
 		public function getImageFromExtension(extension:String):BitmapAsset {
 			if (extension.length < 1)
 				return new FolderItemPicture();

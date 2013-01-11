@@ -1,24 +1,25 @@
 package m.ui {
 	/**
-	 * ...
+	 * An extension of the spark.components.TitleWindow for handling window resizing, minimizing and displaying.
+	 * 
 	 * @author Tom Hanoldt
 	 */
 	import flash.display.DisplayObject;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
-	import flash.geom.Rectangle;
 	import m.ui.components.Button;
-	import mx.containers.Box;
 	import mx.core.FlexGlobals;
 	import mx.core.IVisualElement;
 	import mx.events.CloseEvent;
 	import mx.managers.PopUpManager;
+	import spark.components.Group;
+	import spark.components.Scroller;
 	import spark.components.TitleWindow;
 
 	public class ChildWindow extends TitleWindow{
 		public var minimizeButton:Button = new Button();
 		public var resizeButton:Button   = new Button();
-		public var content:Box 		     = new Box();
+		public var content:Group 		 = new Group();
 		
 		private var oldHeight:Number;
 		private var oldWidth:Number;
@@ -26,12 +27,22 @@ package m.ui {
 		private var oldY:Number;
 		private var oldMouseX:Number;
 		private var oldMouseY:Number;
-				
+		
+		/** 
+		 * Constructor
+		 */
 		public function ChildWindow(){
 			super();	
 			minHeight = 150;
 		}
 		
+		/** 
+		 * This method displays the window inside an application.
+		 * 
+		 * @param parent The parent of the window on which the child window appear. If null the toplevel application is used.
+		 * @param center Indicates weather to center the window inside the parent or not.
+		 * @param model Set the window as modal or not.
+		 */
 		public function show(parent:DisplayObject = null, center:Boolean = true, modal:Boolean = false):void {
 			if (parent == null)
 				parent = FlexGlobals.topLevelApplication as DisplayObject;	
@@ -41,17 +52,31 @@ package m.ui {
 				PopUpManager.centerPopUp(this);
 		}
 		
+		/** 
+		 * This method closes the window.
+		 * 
+		 * @return void
+		 */
 		public function close():void {
 			PopUpManager.removePopUp(this);
 		}
 		
 		[ArrayElementType("mx.core.IVisualElement")]
+		/** 
+		 * This method is used to add mxml components to the window if a mxml component was extended.
+		 */
 		override public function set mxmlContent(value:Array):void {
 			_mxmlContent = value;
 		}
 		private var _mxmlContent:Array;
 
-		private var _scrollRect:Rectangle;
+		private var scroller:Scroller = new Scroller();
+		/** 
+		 * This method is called when the window children will be created.
+		 * Here are the mxml components added to the window.
+		 * 
+		 * @return void
+		 */
 		override protected function createChildren():void {			
 			super.createChildren();
 			
@@ -62,22 +87,11 @@ package m.ui {
 				}
 			}
 			
-			super.addElement(minimizeButton);
-			super.addElement(resizeButton);
-			super.addElement(content);
-			
-			_scrollRect = new Rectangle(0, 0, width, height);		
-			content.scrollRect = _scrollRect;
-			content.width = width;
-			content.height = height - 19;
-			
-			content.setStyle("height", "100%");	
-			content.setStyle("width", "100%");	
-			content.setStyle("paddingTop", "10");	
-			content.setStyle("paddingRight", "10");	
-			content.setStyle("paddingBottom", "10");	
-			content.setStyle("paddingLeft", "10");	
-			
+			scroller.width = width;
+			scroller.height = height;
+			scroller.viewport = content;
+			super.addElement(scroller);
+
 			setStyle("cornerRadius", 10);
 			
 			//init child minimize AppButton
@@ -88,34 +102,60 @@ package m.ui {
 			minimizeButton.top = -27;
 			minimizeButton.source = "assets/img/icons/minimize.png";
 			minimizeButton.addEventListener(MouseEvent.MOUSE_UP, onMinimize);
+			super.addElement(minimizeButton);
 			
 			//init child resize AppButton
-			resizeButton.right = 10;
+			resizeButton.right = scroller.verticalScrollBar.visible ? 10 : 0;
 			resizeButton.height = 20;
 			resizeButton.width = 20;
 			resizeButton.height = 20;
 			resizeButton.bottom = 0;
 			resizeButton.source = "assets/img/icons/resize.png";
 			resizeButton.addEventListener(MouseEvent.MOUSE_DOWN, onResizeStart);
+			super.addElement(resizeButton);
 			
 			//init child close AppButton
 			addEventListener(CloseEvent.CLOSE, onClose);
 		}
 		
+		/** 
+		 * This method adds a event listener for closing event of this window.
+		 * 
+		 * @return void
+		 */
 		public function addOnClose(callback:Function):void {
 			addEventListener(CloseEvent.CLOSE, callback);
 		}
 		
+		/** 
+		 * This method thets the window title
+		 * 
+		 * @param title The new Title.
+		 * 
+		 * @return void.
+		 */
 		override public function set title(title:String):void{
 			//set title of child window
 			super.title = '        ' + title; 
 		}
 			
+		/** 
+		 * This method returns the window title.
+		 * 
+		 * @return The window Title.
+		 */
 		override public function get title():String{
 			//strip window title and return
 			return super.title ? super.title.replace(/^\s+|\s+$/gs, '') : ""; 
 		}
 		
+		/** 
+		 * This method called when the window should minimize.
+		 * 
+		 * @param event The mouse event initiated the minimizing.
+		 * 
+		 * @return void
+		 */
 		protected function onMinimize(event:MouseEvent = null):void {
 			//remove minimize handler
 			minimizeButton.removeEventListener(MouseEvent.MOUSE_UP, onMinimize);
@@ -133,6 +173,14 @@ package m.ui {
 			height = minHeight;		
 		}
 		
+		/** 
+		 * This method is called if the window should unminimize.
+		 * 
+		 * @param event The mouse event which initated the unminimizing.
+		 * @param doHeight Indicates if to restore the old window height.
+		 * 
+		 * @return void 
+		 */
 		protected function onUnMinimize(event:MouseEvent = null, doHeight:Boolean = true):void {
 			//add minimize handler
 			minimizeButton.addEventListener(MouseEvent.MOUSE_UP, onMinimize);
@@ -148,6 +196,13 @@ package m.ui {
 				height = oldHeight;
 		}
 		
+		/** 
+		 * This method is called qhen resizing of window starts.
+		 * 
+		 * @param event The mouse event which initated the resizing.
+		 * 
+		 * @return void
+		 */
 		protected function onResizeStart(event:MouseEvent):void {
 			//store old mouse positions
 			oldMouseX = event.stageX;
@@ -161,6 +216,13 @@ package m.ui {
 			onUnMinimize(null, false);
 		}
 		
+		/** 
+		 * This method is called while resizing the window and sets the actual bounds.
+		 * 
+		 * @param event The mouse event.
+		 * 
+		 * @return void
+		 */
 		protected function onResize(event:MouseEvent):void {
 			//set new height and width with relative mouse coords
 			width  = width  - (oldMouseX - event.stageX);
@@ -169,34 +231,58 @@ package m.ui {
 			//store last mouse positions
 			oldMouseX = event.stageX;
 			oldMouseY = event.stageY;
-			
-			_scrollRect.width = width;
-			_scrollRect.height = height;
-			content.scrollRect = _scrollRect;
-			
-			content.width = width;
-			content.height = height - 19;
 		}
 		
+		/** 
+		 * This method is called when resizing is finished.
+		 * 
+		 * @param event The mouse event.
+		 *
+		 * @return void
+		 */
 		protected function onResizeStop(event:MouseEvent):void {				
 			//remove move handlers
 			stage.removeEventListener(MouseEvent.MOUSE_MOVE, onResize);
 			stage.removeEventListener(MouseEvent.MOUSE_UP, onResizeStop);			
 		}
 		
+		/** 
+		 * This method is called on window close.
+		 * 
+		 * @param event The mouse event.
+		 */
 		private function onClose(event:Event):void {
 			close();
 		}
 		
+		/** 
+		 * This method is called when the display list of the window is updated.
+		 */
 		override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
-			super.updateDisplayList(unscaledWidth, unscaledHeight);
+			super.updateDisplayList(unscaledWidth, unscaledHeight+18);
+			scroller.width = width;
+			scroller.height = height;
+			resizeButton.right = scroller.verticalScrollBar.visible ? 10 : 0;
 		}
 		
-		//override add Element functions, so content is placed in content
+		/** 
+		 * override add Element functions, so childs are added to the wrapped content
+		 * 
+		 * @param element The element to add
+		 * 
+		 * @return the added element.
+		 */
 		override public function addElement(element:IVisualElement):IVisualElement {
 			return content.addElement(element);
 		}
 		
+		/** 
+		 * override add Element functions, so childs are added to the wrapped content
+		 * 
+		 * @param element The element to add
+		 * 
+		 * @return the added element.
+		 */
 		override public function addElementAt(element:IVisualElement, position:int):IVisualElement{
 			return content.addElementAt(element, position);
 		}

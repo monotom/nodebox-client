@@ -1,4 +1,8 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<data>
-
-</data>
+<?xml version="1.0" encoding="utf-8"?>
+<update xmlns="http://ns.adobe.com/air/framework/update/description/1.0">
+    <versionNumber>1.0</versionNumber>
+    <url>http://nodebox.tomhanoldt.info/public/download/nodebox_client.air</url>
+    <description><![CDATA[
+        Test updater   
+  ]]></description>
+</update>

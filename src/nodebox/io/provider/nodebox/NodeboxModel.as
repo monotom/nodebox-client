@@ -10,6 +10,7 @@ package nodebox.io.provider.nodebox
 	import flash.net.URLRequestHeader;
 	import flash.net.URLRequestMethod;
 	import flash.utils.ByteArray;
+	import m.app.AppEvent;
 	import mx.utils.URLUtil;
 	import com.adobe.serialization.json.JSON;
 	import nodebox.App;
@@ -43,10 +44,6 @@ package nodebox.io.provider.nodebox
 		private var sessionKey:String;
 		private var server:String;
 		private var _config:Object = { };
-		public function NodeboxModel() 
-		{
-			
-		}
 		
 		/**
 		 * build full URL string by given values.
@@ -56,8 +53,7 @@ package nodebox.io.provider.nodebox
 		 * @param protocol
 		 * @return built string
 		 */
-		protected function buildFullURL(host:String, target:String, protocol:String = 'http'):String
-		{
+		protected function buildFullURL(host:String, target:String, protocol:String = 'https'):String{
 			var portString:String = '';//(_config.port == 80) ? "" : (":" + _config.port);
 			if (host.indexOf('http://') == 0 || host.indexOf('https://') == 0) {
 				protocol = '';
@@ -70,6 +66,9 @@ package nodebox.io.provider.nodebox
 			return protocol + host + portString + (target == "" ? "" : '/' + target + params); 
 		}
 		
+		/** 
+		 * This method authenitcates a user
+		 */
 		public function login(server:String, name:String, password:String):void {
 			this.server = server;
 			
@@ -78,12 +77,18 @@ package nodebox.io.provider.nodebox
 			load(req, NodeboxEvent.LOGIN_RESULT, NodeboxEvent.LOGIN_FAULT, LOGIN_RESULT);
 		}
 		
+		/** 
+		 * This method calls for information about the logged in user.
+		 */
 		public function accountInfo():void {
 			var req:URLRequest = buildURLRequest(server, 'account/info', {}, URLRequestMethod.GET);
 			
 			load(req, NodeboxEvent.ACCOUNT_INFO_RESULT, NodeboxEvent.ACCOUNT_INFO_FAULT, ACCOUNT_INFO);
 		}
 		
+		/** 
+		 * This method uploads the content of a file.
+		 */
 		public function putFile(path:String, fileName:String, data:ByteArray):void {
 			var req:URLRequest = buildURLRequest(server, 'io/'+path+fileName, {}, URLRequestMethod.POST);
 			var urlLoader:MultipartURLLoader = new MultipartURLLoader();
@@ -96,18 +101,27 @@ package nodebox.io.provider.nodebox
 			urlLoader.load(req.url);
 		}
 		
+		/** 
+		 * This method 
+		 */
 		public function createFolder(path:String):void {
 			var req:URLRequest = buildURLRequest(server, 'io/'+path, {}, 'MKCOL');
 			
 			load(req, NodeboxEvent.FILE_CREATE_FOLDER_RESULT, NodeboxEvent.FILE_CREATE_FOLDER_FAULT, NODEBOX_FILE);
 		}
 		
+		/** 
+		 * This method 
+		 */
 		public function deleteFile(file:String):void {
 			var req:URLRequest = buildURLRequest(server, 'io/'+file, {}, URLRequestMethod.DELETE);
 			
 			load(req, NodeboxEvent.FILE_DELETE_RESULT, NodeboxEvent.FILE_DELETE_FAULT, NODEBOX_FILE);
 		}
 		
+		/** 
+		 * This method 
+		 */
 		public function getFile(file:String, revision:String = ""):void {
 			App.instance.logger.info('calling for file: '+file);
 			var req:URLRequest = buildURLRequest(server, 'io/'+file, {}, URLRequestMethod.GET);
@@ -115,11 +129,18 @@ package nodebox.io.provider.nodebox
 			load(req, NodeboxEvent.GET_FILE_RESULT, NodeboxEvent.GET_FILE_FAULT, "", URLLoaderDataFormat.BINARY);
 		}
 		
+		/** 
+		 * This method 
+		 */
 		public function getMetadata(path:String, limit:int = 1000, recursive:Boolean = true):void {
 			var req:URLRequest = buildURLRequest(server, 'info/metadata/'+path, {}, URLRequestMethod.GET);
 			
 			load(req, NodeboxEvent.METADATA_RESULT, NodeboxEvent.METADATA_FAULT, NODEBOX_FILE);
 		}
+		
+		/** 
+		 * This method 
+		 */
 		public function delta(cursorRevision:String):void {
 			this.dispatchEvent(new NodeboxEvent(NodeboxEvent.DELTA_FAULT));
 			this.dispatchEvent(new NodeboxEvent(NodeboxEvent.DELTA_RESULT));
@@ -148,10 +169,8 @@ package nodebox.io.provider.nodebox
 		 * 
 		 * @param evt
 		 */
-		protected function ioErrorHandler(evt:IOErrorEvent):void
-		{
-			var urlLoader:NodeboxURLLoader = NodeboxURLLoader(evt.target);
-			this.dispatchNodeboxEvent(urlLoader.eventFaultType, evt, urlLoader.data);
+		protected function ioErrorHandler(evt:IOErrorEvent):void{
+			App.instance.dispatchEvent(new AppEvent(AppEvent.ON_APP_CONNECT_ERROR));
 		}
 		
 		/**
@@ -159,10 +178,8 @@ package nodebox.io.provider.nodebox
 		 *  
 		 * @param evt
 		 */
-		protected function securityErrorHandler(evt:SecurityErrorEvent):void
-		{
-			var urlLoader:NodeboxURLLoader = NodeboxURLLoader(evt.target);
-			this.dispatchNodeboxEvent(urlLoader.eventFaultType, evt, urlLoader.data);
+		protected function securityErrorHandler(evt:SecurityErrorEvent):void{
+			App.instance.dispatchEvent(new AppEvent(AppEvent.ON_APP_CONNECT_ERROR));
 		}
 		
 		
@@ -207,17 +224,10 @@ package nodebox.io.provider.nodebox
 		 */
 		protected function buildURLRequest(apiHost:String, target:String, params:Object,
 									    httpMethod:String = URLRequestMethod.GET,
-									    protocol:String = 'http'):URLRequest
+									    protocol:String = 'https'):URLRequest
 		{
-			//target  = OAuthHelper.encodeURL(target);
 			var url:String = this.buildFullURL(apiHost, target, protocol);
-			
-			/*var urlReqHeader:URLRequestHeader = OAuthHelper.buildURLRequestHeader(url, params, 
-				config.consumerKey, config.consumerSecret, 
-				config.accessTokenKey, config.accessTokenSecret, httpMethod);
-			*/
 			var urlRequest:URLRequest = new URLRequest();
-			//urlRequest.requestHeaders = [urlReqHeader];
 			urlRequest.method = httpMethod;
 			urlRequest.data = URLUtil.objectToString(params, '&');
 			urlRequest.url = url;
@@ -261,12 +271,11 @@ package nodebox.io.provider.nodebox
 				} else if (urlLoader.resultType == DELTA_INFO) {
 					resultObject = com.adobe.serialization.json.JSON.decode(urlLoader.data);
 				} else {
-					App.instance.logger.error('generic data:'+urlLoader.data);
 					resultObject = urlLoader.data;
 				}
 			} catch (e:Error) {
 				App.instance.logger.error(e.message);
-				this.dispatchNodeboxEvent(urlLoader.eventFaultType, evt, e);
+				this.dispatchNodeboxEvent(urlLoader.eventFaultType, evt, e, e.message);
 				return;
 			}
 			
