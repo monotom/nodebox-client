@@ -3,7 +3,7 @@
 	
 	<name>Nodebox-Client</name> 
 	<id>nodebox.NodeboxClient</id> 
-	<versionNumber>1.0</versionNumber> 
+	<versionNumber>1.1</versionNumber> 
 	
 	<filename>Nodebox-Client</filename> 
 	<description>The Nodebox Client connects to Dropbox and other storage hoster.</description> 

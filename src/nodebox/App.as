@@ -7,11 +7,8 @@ package nodebox{
 	import flash.events.Event;
 	import flash.filesystem.File;
 	import m.app.AppBase;
-	import m.app.AppConfig;
 	import m.app.AppEvent;
 	import m.io.LocalFileManager;
-	import mx.core.FlexGlobals;
-	import mx.styles.StyleManager;
 	import nodebox.app.Desktop;
 	import nodebox.io.provider.ProviderInterface;
 	import nodebox.plugins.PluginEvent;
@@ -147,10 +144,10 @@ package nodebox{
 				registerDataProvider(provider);
 		}
 		
-		private var desktopPlugins:Object = new Object();
 		/** 
 		 * This method registers a desktop plugin and adds supportet events.
 		 */
+		private var desktopPlugins:Object = new Object();
 		private function registerDesktopPlugin(plugin:PluginInterface):void {
 			desktopPlugins[plugin.getName()] = plugin;
 			for each(var eventMap:Object in plugin.getSupportedEvents())
@@ -177,17 +174,18 @@ package nodebox{
 			dispatchEvent(new PluginEvent(PluginEvent.ON_PROVIDER_REGISTER, provider));
 		}
 
-		private var _dataProvider:ProviderInterface = null;
-		public function get dataProvider():ProviderInterface {
-			return _dataProvider;
-		}
 		/** 
 		 * This method selects a registered dataprovider to be used for the next steps.
 		 */
+		private var _dataProvider:ProviderInterface = null;
 		public function selectDataProviderByName(name:String):void {
 			unregisterDesktopPlugin(_dataProvider);
 			_dataProvider = dataProviders[name];
 			registerDesktopPlugin(_dataProvider);
+		}
+		
+		public function get dataProvider():ProviderInterface {
+			return _dataProvider;
 		}
 		
 		private var _localFileManager:LocalFileManager = null;
@@ -210,3 +208,4 @@ package nodebox{
 		}
 	}
 }
+

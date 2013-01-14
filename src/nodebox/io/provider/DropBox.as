@@ -3,8 +3,8 @@ package nodebox.io.provider {
 	import flash.events.Event;
 	import flash.net.*;
 	import flash.utils.ByteArray;
-	import m.app.AppEvent;
 	import m.app.AppConfig;
+	import m.app.AppEvent;
 	import m.io.queue.FunctionQueue;
 	import nodebox.App;
 	import nodebox.io.Item;
@@ -44,7 +44,6 @@ package nodebox.io.provider {
 			dropAPI.addEventListener(DropboxEvent.FILE_MOVE_FAULT, faultHandler);
 			dropAPI.addEventListener(DropboxEvent.GET_FILE_FAULT, faultHandler);
 			dropAPI.addEventListener(DropboxEvent.MEDIA_FAULT, faultHandler);
-			//dropAPI.addEventListener(DropboxEvent.METADATA_FAULT, faultHandler);
 			dropAPI.addEventListener(DropboxEvent.PUT_FILE_FAULT, faultHandler);
 			dropAPI.addEventListener(DropboxEvent.REQUEST_TOKEN_FAULT, faultHandler);
 			dropAPI.addEventListener(DropboxEvent.REVISION_FAULT, faultHandler);
@@ -89,7 +88,7 @@ package nodebox.io.provider {
 		[Embed(source="../../../../bin/assets/img/provider/dropbox.png")]
 		private static var Logo:Class;		
 		/** 
-		 * This method 
+		 * This method returns the provider logo
 		 */
 		public function getImage():Image {
 			var img:Image = new Image();
@@ -98,7 +97,7 @@ package nodebox.io.provider {
 		}
 		
 		/** 
-		 * This method 
+		 * Interface implementation nodebox.plugins.PluginInterface
 		 */
 		public function getSupportedEvents():Array {
 			return [];
@@ -127,7 +126,7 @@ package nodebox.io.provider {
 				browser.show(App.instance.window, false, true);
 				browser.hideControlls = true;
 				browser.load( new URLRequest(dropAPI.authorizationUrl));
-				browser.addOnClose(function(e:Event):void {
+				browser.addOnClose(function(e:Event):void {					
 					getAccessToken(function(e:Event):void {
 						if(callback != null)
 							callback(e);
@@ -281,7 +280,6 @@ package nodebox.io.provider {
 				};
 				getMetadata(path, function(item:Item):void {
 					dropAPI.removeEventListener(DropboxEvent.METADATA_FAULT, faultMethod);
-					App.instance.logger.info('exists response for: '+item.path+' exists:'+(!item.isDeleted));
 					existsQueue.queueCallback(callback, !item.isDeleted);
 				});
 			} );
@@ -321,7 +319,6 @@ package nodebox.io.provider {
 		 */
 		private function generateItemFromFile(input:DropboxFile):Item {
 			var output:Item = new Item();
-			output.state = Item.ITEM_STATE_INITIALIZED;	
 			output.bytes = input.bytes;
 			output.modified = input.modified;
 			output.isDir = input.isDir;

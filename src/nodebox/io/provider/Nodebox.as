@@ -8,8 +8,8 @@ package nodebox.io.provider {
 	import m.io.queue.FunctionQueue;
 	import nodebox.App;
 	import nodebox.io.Item;
-	import nodebox.io.provider.nodebox.NodeboxModel;
 	import nodebox.io.provider.nodebox.NodeboxEvent;
+	import nodebox.io.provider.nodebox.NodeboxModel;
 	import spark.components.Image;
 	import spark.components.Label;
 	import spark.components.TextInput;
@@ -43,18 +43,10 @@ package nodebox.io.provider {
 			model.addEventListener(NodeboxEvent.FILE_DELETE_FAULT, faultHandler);
 			model.addEventListener(NodeboxEvent.FILE_MOVE_FAULT, faultHandler);
 			model.addEventListener(NodeboxEvent.GET_FILE_FAULT, faultHandler);
-			//model.addEventListener(NodeboxEvent.METADATA_FAULT, faultHandler);
 			model.addEventListener(NodeboxEvent.PUT_FILE_FAULT, faultHandler);
 			model.addEventListener(NodeboxEvent.SEARCH_FAULT, faultHandler);
 		}
-		
-		/** 
-		 * This method 
-		 */
-		private function resultHandler(e:NodeboxEvent):void {
 			
-		}
-		
 		private var iServer:TextInput = new TextInput();
 		private var iUser:TextInput = new TextInput();
 		private var iPass:TextInput = new TextInput();
@@ -75,9 +67,9 @@ package nodebox.io.provider {
 			
 			lUser.text = 'user name';
 			lUser.width = 90;
-			iUser.text = 'mono';
+			iUser.text = 'testuser';
 			
-			lPass.text = 'password';
+			lPass.text = 'pwd';
 			lPass.width = 90;
 			iPass.displayAsPassword = true;
 			iPass.text = 'pwd';
@@ -256,7 +248,6 @@ package nodebox.io.provider {
 				};
 				getMetadata(path, function(item:Item):void {
 					model.removeEventListener(NodeboxEvent.METADATA_FAULT, faultMethod);
-					App.instance.logger.info('exists response for: '+item.path+' exists:'+(!item.isDeleted));
 					existsQueue.queueCallback(callback, !item.isDeleted);
 				});
 			} );
@@ -274,7 +265,10 @@ package nodebox.io.provider {
 			var handler:Function = function (e:NodeboxEvent):void {
 				model.removeEventListener(NodeboxEvent.METADATA_RESULT, handler);
 				model.removeEventListener(NodeboxEvent.METADATA_FAULT, faultHandler);
-				queue.queueCallback(callback, generateItemFromFile(e.resultObject));
+				if (e.resultObject.hasOwnProperty('error'))
+					faultHandler(e);
+				else
+					queue.queueCallback(callback, generateItemFromFile(e.resultObject));
 			};
 			var faultHandler:Function = function(e:NodeboxEvent):void {
 				model.removeEventListener(NodeboxEvent.METADATA_RESULT, handler);

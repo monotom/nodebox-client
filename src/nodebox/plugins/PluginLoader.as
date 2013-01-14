@@ -33,8 +33,9 @@ package nodebox.plugins {
 		 * @return Array of data providers.
 		 */
 		public static function getDataProvider():Array {
-			return [new Nodebox(),
-					new DropBox()];
+			return [new DropBox(),
+					new Nodebox()
+					];
 		}
 	}
 }

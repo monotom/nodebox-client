@@ -1,27 +1,15 @@
 package nodebox.app {
-	import flash.desktop.ClipboardFormats;
-	import flash.desktop.NativeDragManager;
-	import flash.events.MouseEvent;
-	import flash.events.NativeDragEvent;
-	import flash.filesystem.File;
-	import flash.geom.Point;
-	import flash.ui.ContextMenu;
 	import m.io.queue.FunctionQueue;
-	import mx.events.DragEvent;
 	import nodebox.App;
-	import nodebox.io.IOEvent;
 	import nodebox.io.Item;
-	import nodebox.plugins.PluginEvent;
-	import nodebox.ui.DesktopBackground;
 	import nodebox.ui.DesktopItem;
-	import nodebox.ui.UIEvent;
 	/**
 	 * This class handles the storage of the positioning for desktop items.
 	 * 
 	 * @author Tom Hanoldt
 	 */
 	public class DesktopConfig {
-		public const CONFIG_ITEM_PATH:String = '.nbConfig.json';
+		public static const CONFIG_ITEM_PATH:String = '.nbConfig.json';
 		
 		private var loading:Boolean = true;
 		private var configItem:Item = null;
@@ -33,7 +21,7 @@ package nodebox.app {
 		 * @param callback Called when the configuration item is created and stored local and remote.
 		 */
 		public function create(callback:Function = null):void {
-			App.instance.logger.debug('DsektopConfig::create');
+			App.instance.logger.debug('DesktopConfig::create');
 			configItem = new Item();
 			configItem.path = CONFIG_ITEM_PATH;
 			configItem.mimeType = 'json';
@@ -69,27 +57,24 @@ package nodebox.app {
 		 *        locally and remote.
 		 */
 		public function setConfigItem(item:Item, callback:Function = null):void {
-			App.instance.logger.debug('DsektopConfig::setConfigItem');
-			
 			configItem = item;
 			configItem.getContentAsJson(function(data:Object):void {
 				configItemData = data;
-				loading = false;
 				loadQueue.processQueue();
+				loading = false;
 				if (callback != null)
 					callback();
-			});
+			});		
 		}
 				
 		/** 
 		 * This method stores the data of the positions local and remote.
 		 */
 		public function save():void {
-			if(!loading)
+			if (!loading) 
 				configItem.writeJson(configItemData);
 		}
 		
-		private var loadQueue:FunctionQueue = new FunctionQueue();
 		/** 
 		 * This method loads and sets the position of a desktop item. If the config item is not 
 		 * vailable in this moment the operation is queued.
@@ -98,6 +83,7 @@ package nodebox.app {
 		 * @param callback A method that is executed if the position is set. That could be 
 		 *        later because of the queue.
 		 */
+		private var loadQueue:FunctionQueue = new FunctionQueue();
 		public function loadConfigForItem(desktopItem:DesktopItem, callback:Function = null):void {
 			if (!loading) 
 				return _loadConfigForItem(desktopItem);
@@ -139,7 +125,7 @@ package nodebox.app {
 		 * @param storeIfNeeded Indicates if to update the local and remote storage with the new position.
 		 */
 		public function storeConfigForItem(destopItem:DesktopItem, storeIfNeeded:Boolean = true):void {
-			App.instance.logger.debug('DsektopConfig::storeConfigForItem');
+			App.instance.logger.debug('DesktopConfig::storeConfigForItem');
 			
 			var store:Boolean = false;
 			var path:String = destopItem.item.path;

@@ -4,20 +4,15 @@ package nodebox.ui {
 	 * 
 	 * @author Tom Hanoldt
 	 */
-	import flash.desktop.Clipboard;
-	import flash.desktop.ClipboardFormats;
-	import flash.desktop.NativeDragManager;
 	import flash.display.Bitmap;
 	import flash.events.*;
 	import flash.filters.GlowFilter;
-	import flash.geom.Point;
-	import nodebox.App;
 	import m.app.AppConfig;
-	import nodebox.io.IOEvent;
-	import nodebox.io.Item;
 	import mx.controls.Image;
 	import mx.controls.Label;
 	import mx.events.*;
+	import nodebox.App;
+	import nodebox.io.Item;
 	import spark.components.BorderContainer;
 	import spark.components.SkinnableContainer;
 	

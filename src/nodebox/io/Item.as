@@ -1,7 +1,6 @@
 package nodebox.io{
 	import flash.desktop.Clipboard;
 	import flash.desktop.ClipboardFormats;
-	import flash.display.Bitmap;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.filesystem.File;
@@ -32,8 +31,8 @@ package nodebox.io{
 		public static const ITEM_STATE_INITIALIZED:int = 1;
 		public static const ITEM_STATE_SYNCED:int = 2;
 		public static const ITEM_STATE_SYNCING:int = 3;
-		public static const ITEM_STATE_UNSYNCABLE:int = 4;//TODO
-		public static const ITEM_STATE_LOCAL_CHANGED:int = 5//TODO
+		public static const ITEM_STATE_UNSYNCABLE:int = 4;
+		public static const ITEM_STATE_LOCAL_CHANGED:int = 5;
 		
 		public var state:int = ITEM_STATE_UNINITIALIZED;
 		
@@ -81,7 +80,7 @@ package nodebox.io{
 		public function get path():String {
 			return _path;
 		}
-		
+				
 		/** 
 		 * This normalizes and sets the path of the item
 		 * 
@@ -90,9 +89,7 @@ package nodebox.io{
 		//TODO if its a synced item move the item local and remote to the new path
 		public function set path(value:String):void {
 			_path = normalizePath(value);  
-			if (localModel.isAvailable(_path))
-				state = (localModel.isAvailable(_path)) ? ITEM_STATE_SYNCED : ITEM_STATE_INITIALIZED;
-			
+			state = (localModel.isAvailable(_path)) ? ITEM_STATE_SYNCED : ITEM_STATE_INITIALIZED;
 		}
 		
 		/** 
@@ -102,6 +99,10 @@ package nodebox.io{
 		 */
 		public function get pathWithoutName():String {	
 			return path.substr(0, path.length - name.length);
+		}
+		
+		public function get localPath():String {
+			return localModel.buildPath(path);
 		}
 		
 		/** 
@@ -125,7 +126,7 @@ package nodebox.io{
 		}
 		
 		/** 
-		 * This method copies the properties of one item to this item.
+		 * This method copies the properties of one item to this item. Used for updates.
 		 * 
 		 * @param srcItem The item from wherer the propties should be coppied.
 		 */
@@ -139,22 +140,20 @@ package nodebox.io{
 			revision	 = srcItem.revision;
 			isDeleted 	 = srcItem.isDeleted;
 			hash		 = srcItem.hash;
-			
-			var subItem:Item
+						
 			//remove unpresent childs
+			var subItem:Item
 			for each(subItem in self.childs) {
 				if (srcItem.childs.hasOwnProperty(subItem.path))
 					continue;
 				
-				self.childs[subItem.path].remove();
 				delete self.childs[subItem.path];				
 			}
 			
-			//add and update items from imported item
+			//import child data
 			for each(subItem in srcItem.childs) {
-				if (!childs.hasOwnProperty(subItem.path)){
-					childs[subItem.path] = subItem;//TODO dispatch new event	
-				}
+				if (!childs.hasOwnProperty(subItem.path))
+					childs[subItem.path] = subItem;				
 				else
 					childs[subItem.path].importProperties(subItem);
 			}	
@@ -175,6 +174,8 @@ package nodebox.io{
 		 * @return True if exsits, false otherwise.
 		 */
 		public function isLocalAvailable():Boolean {
+			if (state == ITEM_STATE_UNINITIALIZED) return false;
+			
 			return localModel.isAvailable(path);
 		}
 		
@@ -184,7 +185,56 @@ package nodebox.io{
 		 * @return True if exsits, false otherwise.
 		 */
 		public function isRemoteAvailable(callback:Function):void {
-			return remoteModel.isAvailable(path, callback);
+			if (state == ITEM_STATE_UNINITIALIZED) 
+				callback(false);
+			else
+				remoteModel.isAvailable(path, callback);
+		}
+		
+		/**
+		 * Synchronizes this item. Downloads, deltes, updates and synchronizes this and childs
+		 * 
+		 * @param	callback
+		 */
+		public function sync(callback:Function = null):void {
+			if (state == ITEM_STATE_UNINITIALIZED) return ;
+			if (state == ITEM_STATE_SYNCING) return ;
+			
+			state = ITEM_STATE_SYNCING;	
+			
+			dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCING, self));	
+			remoteModel.getMetadata(path, function(newVersionItem:Item):void {
+				var child:Item;
+				
+				if (newVersionItem.isDeleted) {
+					if(isDir)
+						for each(child in childs)
+							child.remove();
+						
+					remove();//set the state
+					return callbackIfSet(callback);
+				}
+				
+				var oldRevision:String = revision;
+				importProperties(newVersionItem);
+				
+				if (oldRevision != revision
+				|| !isLocalAvailable()) {					
+					loadRemoteChanges(function(i:Item):void {//sets the state			
+						callbackIfSet(callback);
+					});
+				}
+				else {
+					state = ITEM_STATE_SYNCED;
+					dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCED, self));				
+					callbackIfSet(callback);
+				}
+				
+				if(isDir)
+					for each(child in childs)
+						child.sync();
+					
+			}, 1000, isDir);
 		}
 		
 		/** 
@@ -193,31 +243,113 @@ package nodebox.io{
 		 * @param callback A method that is called if the operation is finished.
 		 * @param overrideOnConflikt //TODO implement
 		 */
-		public function loadRemoteChanges(callback:Function = null, overrideOnConflict:Boolean = true):void {
-			localModel.remove(path);
-			makeLokalAvailable(function (item:Item):void {
-				self.importProperties(item);
-				callbackIfSet(callback, true);
+		private function loadRemoteChanges(callback:Function = null, overrideOnConflict:Boolean = true):void {
+			if (state == ITEM_STATE_UNINITIALIZED) return ;
+			
+			if(isLocalAvailable())
+				localModel.remove(path);
+				
+			makeLokalAvailable(function (item:Item):void {//sets the state
+				callbackIfSet(callback, item);
 			});
 		}
 		
 		/** 
+		 * This method downloads a remote file or creates a folder and sets the icon states.
+		 * 
+		 * @param callback A method that is called if the file is synced.
+		 */
+		private function makeLokalAvailable(callback:Function = null):void {
+			if (state == ITEM_STATE_UNINITIALIZED) return ;
+			
+			App.instance.logger.info('Item.makeLokalAvailable("' + path + '")');
+			
+			state = ITEM_STATE_SYNCING;
+			dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCING, self));
+			var finish:Function = function():void {
+				state = ITEM_STATE_SYNCED;
+				callbackIfSet(callback);
+				dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCED, self));				
+			};
+			
+			if (isLocalAvailable()) {
+				finish();
+			}			
+			else if (isDir) {
+				localModel.createFolder(path);
+				finish();
+			}
+			else{				
+				remoteModel.getFile(path, function(data:ByteArray):void {
+					localModel.writeBinary(path, data);
+					finish();
+				});
+			}
+		}
+		
+		/** 
+		 * This method updates or creates the remote file content.
+		 *
+		 * @param callback A method that is called if the file is synced.
+		 */
+		public function updateRemote(callback:Function = null):void {
+			if (state == ITEM_STATE_UNINITIALIZED) return ;
+			
+			App.instance.logger.info('Item.updateRemote(remotePath: ' + pathWithoutName + ' localPath:' + path);
+			var file:File;
+			if (isDir) {
+				var childPathes:Array = [];
+				for each(var child:Item in self.childs){
+					child.updateRemote();
+					childPathes.push(child.localPath);
+				}
+				
+				//create and upload new files within directory
+				var newItem:Item;
+				var localFiles:Array = localModel.getDirectoryListening(path);
+				for each(file in localFiles) {
+					if (childPathes.indexOf(file.nativePath) != -1)
+						continue;
+					
+					newItem = new Item();
+					newItem.path = path+'/'+file.name;
+					newItem.isDir = file.isDirectory;
+					App.instance.logger.debug('upload : '+newItem.path);
+					newItem.updateRemote();
+				}
+			}
+			else {
+				state = ITEM_STATE_SYNCING;
+				dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCING, self));
+					
+				file = localModel.getFile(path);
+				remoteModel.uploadFile(pathWithoutName, file.name, localModel.getContentAsBinary(path), function(e:Event):void {
+					self.state = ITEM_STATE_SYNCED;
+					callbackIfSet(callback);
+					self.dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCED, self));
+				});
+			}
+		}
+//CREATE
+		/** 
 		 * This method copies the a local file or folder to the desktop and uploads the new or updated file.
-		 * The path for the new file is taken from 'this' Item reference.
+		 * The path for the new file is taken from 'this' Item reference and must be set before.
 		 * 
 		 * @param src the local file to copy from. If its a folder it is processed recursive.
 		 * 
-		 * @return Inidicates if there was a problem copiing the local file.
+		 * @return Inidicates if the file allready exists.
 		 */
 		public function copyFrom(src:File):Boolean {
-			App.instance.logger.info('Item.copyTo(from:' + src.nativePath + ',"to:' + localModel.getFile(path).nativePath + '")');
 			try{
 				src.copyTo(localModel.getFileRefference(path), false);
+				App.instance.logger.info('Item.copyTo(from:' + src.nativePath + ',"to:' + localModel.getFile(path).nativePath + '")');
 			}
 			catch (e:Error) {
 				return false;
 			}
-			state = ITEM_STATE_LOCAL_CHANGED;
+			
+			state = ITEM_STATE_SYNCING;
+			dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCING, self));				
 			createRemote(function(item:Item):void {
 				state = ITEM_STATE_SYNCED;
 				dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCED, item));
@@ -230,7 +362,7 @@ package nodebox.io{
 		/** 
 		 * This method called internally to process importing folders recursive.
 		 */
-		private function  createRecursiveRemote(files:Array, subPath:String = ''):void {
+		private function createRecursiveRemote(files:Array, subPath:String = ''):void {
 			var f:Function = function(subFile:File):void {
 				var subItem:Item = new Item();
 				subItem.path = subPath.length < 1 ? subFile.name : subPath + '/' +subFile.name;
@@ -246,49 +378,76 @@ package nodebox.io{
 		}
 		
 		/** 
-		 * This method downloads a remote file or creates a folder and sets the icon states.
-		 * 
-		 * @param callback A method that is called if the file is synced.
-		 */
-		public function makeLokalAvailable(callback:Function = null):void {
-			App.instance.logger.info('Item.makeLokalAvailable("' + path + '")');
-			
-			var finish:Function = function():void {
-				state = ITEM_STATE_SYNCED;
-				if(callback != null)
-					callback(self);
-				dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCED, self));
-			};
-			
-			if (isDir) {
-				localModel.createFolder(path);
-				finish();
-			}
-			else if (!isLocalAvailable()) {
-				state = ITEM_STATE_SYNCING;
-				dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCING, self));
-				remoteModel.getFile(path, function(data:ByteArray):void {
-					localModel.writeBinary(path, data);
-					finish();
-				});
-			}
-			else if(callback != null)
-				finish();
-		}
-		
-		/** 
-		 * This method updates the remote file content.
+		 * This method creates the remote file or folder.
 		 *
 		 * @param callback A method that is called if the file is synced.
 		 */
-		public function updateRemote(callback:Function = null):void {
-			App.instance.logger.info('Item.updateRemote(remotePath: ' + pathWithoutName + ' localPath:' + path);
-			var file:File = localModel.getFile(path);
-			remoteModel.uploadFile(pathWithoutName, file.name, localModel.getContentAsBinary(path), function(e:Event):void {
+			private function createRemote(callback:Function = null):void {				
+				if (isDir)
+					remoteModel.createFolder(path, function(item:Item = null):void {
+						callbackIfSet(callback);
+					});
+				else if (isLocalAvailable())
+					updateRemote(callback);
+				else 
+					callbackIfSet(callback);
+			}
+//REMOVE	
+		/** 
+		 * This method deletes a file local and remote.
+		 *
+		 * @param callback A method that is called if the file is synced.
+		 */
+		public function remove(callback:Function = null):void {
+			App.instance.logger.info('remove for '+path);
+			
+			state = ITEM_STATE_SYNCING;
+			dispatchEvent(new IOEvent(IOEvent.ON_FILE_SYNCING, self));
+			var finish:Function = function(i:Item = null):void {
+				App.instance.dispatchEvent(new IOEvent(IOEvent.ON_FILE_DELETED, self));
+				state = ITEM_STATE_UNINITIALIZED;
 				callbackIfSet(callback);
-			});
+			}
+					
+			if (isLocalAvailable()) {
+				removeLocal(function(i:Item):void {
+					removeRemote(finish);
+				});
+			}
+			else {
+				removeRemote(finish);
+			}
 		}
-		
+			
+			/** 
+			 * This method deletes the local file.
+			 *
+			 * @param callback A method that is called if the file is synced.
+			 */
+			public function removeLocal(callback:Function = null):void {
+				localModel.remove(path);
+				callbackIfSet(callback);
+			}
+			
+			/** 
+			 * This method deletes a file remote.
+			 *
+			 * @param callback A method that is called if the file is synced.
+			 */
+			private function removeRemote(callback:Function = null):void {
+				isRemoteAvailable(function(exists:Boolean):void {
+					if (exists) {
+						remoteModel.deleteFile(path, function(e:Event):void {
+							callbackIfSet(callback);					
+						});
+					}
+					else {
+						callbackIfSet(callback);
+					}
+				});				
+			}
+			
+//READ/WRITE	
 		/** 
 		 * This method wites an object to the local file and updates the remote file.
 		 *
@@ -318,100 +477,6 @@ package nodebox.io{
 			localModel.writeBinary(path, data);
 			updateRemote(callback);
 		}
-		
-		public function sync(callback:Function = null):void {
-			remoteModel.getMetadata(path, function(i:Item):void {
-				if (i.isDeleted){
-					remove();
-					return callbackIfSet(callback);
-				}
-				
-				var oldRevision:String = revision;
-				importProperties(i);
-				
-				if (oldRevision != revision
-				|| !isLocalAvailable()) {
-					makeLokalAvailable(function(i:Item):void {
-						callbackIfSet(callback);
-					});
-				}
-				else
-					callbackIfSet(callback);
-					
-				if(isDir)
-					for(var childPath:String in self.childs)
-						self.childs[childPath].sync();
-					
-			}, 1000, isDir);
-		}
-		
-		/** 
-		 * This method creates the remote file or folder.
-		 *
-		 * @param callback A method that is called if the file is synced.
-		 */
-			private function createRemote(callback:Function = null):void {				
-				if (isDir)
-					remoteModel.createFolder(path, function(item:Item = null):void {
-						callbackIfSet(callback);
-					});
-				else if (isLocalAvailable())
-					updateRemote(callback);
-				else 
-					callbackIfSet(callback);
-			}
-			
-		/** 
-		 * This method deletes a file local and remote.
-		 *
-		 * @param callback A method that is called if the file is synced.
-		 */
-		public function remove(callback:Function = null):void {
-			state = ITEM_STATE_SYNCING;
-			
-			var finish:Function = function(i:Item = null):void {
-				App.instance.dispatchEvent(new IOEvent(IOEvent.ON_FILE_DELETED, self));
-				state = ITEM_STATE_UNINITIALIZED;
-				callbackIfSet(callback);
-			}
-					
-			if (isLocalAvailable()) {
-				removeLocal(function(i:Item):void {
-					removeRemote(finish);
-				});
-			}
-			else {
-				removeRemote(finish);
-			}
-		}
-			
-		/** 
-		 * This method deletes the local file.
-		 *
-		 * @param callback A method that is called if the file is synced.
-		 */
-			public function removeLocal(callback:Function = null):void {
-				localModel.remove(path);
-				callbackIfSet(callback);
-			}
-			
-		/** 
-		 * This method deletes a file remote.
-		 *
-		 * @param callback A method that is called if the file is synced.
-		 */
-			private function removeRemote(callback:Function = null):void {
-				isRemoteAvailable(function(exists:Boolean):void {
-					if (exists) {
-						remoteModel.deleteFile(path, function(e:Event):void {
-							callbackIfSet(callback);					
-						});
-					}
-					else {
-						callbackIfSet(callback);
-					}
-				});				
-			}
 			
 		/** 
 		 * This method reads the content of the local file as binary.
@@ -419,14 +484,9 @@ package nodebox.io{
 		 * @param callback A method that is called if the operation is finished.
 		 */
 		public function getContentAsBinary(callback:Function):void {
-			if (!isLocalAvailable()) {
-				makeLokalAvailable(function(item:Item):void {
-					callback(localModel.getContentAsBinary(path));
-				});
-			}
-			else {
+			makeLokalAvailable(function(item:Item):void {
 				callback(localModel.getContentAsBinary(path));
-			}
+			});
 		}
 		
 		/** 
@@ -435,14 +495,9 @@ package nodebox.io{
 		 * @param callback A method that is called if the operation is finished.
 		 */
 		public function getContentAsText(callback:Function):void {
-			if (!isLocalAvailable()) {
-				makeLokalAvailable(function(item:Item):void {
-					callback(localModel.getContentAsText(path));
-				});
-			}
-			else {
+			makeLokalAvailable(function(item:Item):void {
 				callback(localModel.getContentAsText(path));
-			}
+			});
 		}
 		
 		/** 
@@ -451,14 +506,9 @@ package nodebox.io{
 		 * @param callback A method that is called if the operation is finished.
 		 */
 		public function getContentAsJson(callback:Function):void {
-			if (!isLocalAvailable()) {
-				makeLokalAvailable(function(item:Item):void {
-					callback(localModel.getContentAsJson(path));
-				});
-			}
-			else {
+			makeLokalAvailable(function(item:Item):void {
 				callback(localModel.getContentAsJson(path));
-			}
+			});
 		}
 		
 		/** 

@@ -6,6 +6,7 @@ package nodebox.plugins {
 	import m.app.AppEvent;
 	import m.io.timer.PeriodicExecuter;
 	import nodebox.App;
+	import nodebox.app.DesktopConfig;
 	import nodebox.app.LocalConfigItem;
 	import nodebox.io.Item;
 	
@@ -22,6 +23,7 @@ package nodebox.plugins {
 		 */
 		public function DesktopItemHandler() {
 			periodicExecuter = new PeriodicExecuter(AppConfig.xml.app.syncRootFolderIntervallMs, executerCallback, false);
+			//for deserialisation
 			registerClassAlias("Item", Item);  
 		}
 		
@@ -53,65 +55,55 @@ package nodebox.plugins {
 		 * @param e The triggering event.
 		 */
 		private var stopped:Boolean = true;
-		private var localConfigFile:String;
 		private function loadRootItems(e:Event):void {
 			resetItems();
 			stopped = false;
-			
-			localConfigFile = '.'+App.instance.dataProvider.uniqueUserId()+'.DesktopItemHandler.conf';
-			localConfig = new LocalConfigItem(localConfigFile);
+			localConfig = new LocalConfigItem(
+					'.'+App.instance.dataProvider.uniqueUserId()+'.DesktopItemHandler.ser');
 			
 			if (localConfig.exists) {
 				var data:ByteArray = localConfig.loadByteArray();
 				rootItems = data.readObject() as Object;
-				
 				App.instance.desktop.addRootItems(rootItems);
-				periodicExecuter.start();	
+				periodicExecuter.start();				
 			}
 			else{
 				App.instance.dataProvider.getMetadata(ROOT_PATH, function(item:Item):void {
-					for (var childPath:String in item.childs) {
+					for (var childPath:String in item.childs){
 						rootItems[childPath] = item.childs[childPath];
 						rootItems[childPath].sync();
 					}
-					App.instance.desktop.addRootItems(rootItems);
-					periodicExecuter.start();
+					App.instance.desktop.addRootItems(rootItems);		
+					periodicExecuter.start();					
 				});
-			}
+			}		
 		}
 		
 		/** 
 		 * This method is called periodically and watches the root desktop items for cchanges.
 		 */
 		private function executerCallback(e:Event):void {
-			if (stopped)
-				return ;
-				
-			//stop the executor while processing
+			if (stopped) return ;
 			periodicExecuter.stop();
 			
 			App.instance.dataProvider.getMetadata(ROOT_PATH, function(rootItem:Item):void {
-				App.instance.logger.debug('changed item check: processing');
-				var pathCache:Array = [], item:Item ;
-				for each(item in rootItem.childs) {	
-					//used for deletion of unpresent items	
-					pathCache.push(item.path);
-					
-					//if the item is new, add to desktop and sync
-					if (!rootItems.hasOwnProperty(item.path)) {
-						App.instance.logger.debug('add item:'+item.path);
-						rootItems[item.path] = item;
-						App.instance.desktop.addRootItem(item);	
+				var k:String;
+				//delete removed files
+				for (k in rootItems)
+					if (!rootItem.childs.hasOwnProperty(k)) {
+						rootItems[k].sync();
+						delete rootItems[k];
 					}
-					
-					//sync item
-					rootItems[item.path].sync();
-				}
 				
-				//delete not present items
-				for each(item in rootItems)
-					if (pathCache.indexOf(item.path) == -1) 
-						delete rootItems[item.path];
+				for (k in rootItem.childs) {
+					//add new childs
+					if (!rootItems.hasOwnProperty(k)) {
+						rootItems[k] = rootItem.childs[k];
+						App.instance.desktop.addRootItem(rootItem.childs[k]);	
+					}
+					//and sync all childs
+					rootItem.childs[k].sync();
+				}
 				
 				//write back the coonfig object
 				var bytes:ByteArray = new ByteArray();
@@ -119,7 +111,8 @@ package nodebox.plugins {
 				localConfig.saveByteArray(bytes);
 				
 				//restart the executer
-				periodicExecuter.start();
+				if (!stopped) 
+					periodicExecuter.start();
 			});
 		}
 		
@@ -130,6 +123,7 @@ package nodebox.plugins {
 			rootItems = { };
 			periodicExecuter.stop();
 			stopped = true;
+			App.instance.desktop.clean();
 		}
 	}
 }

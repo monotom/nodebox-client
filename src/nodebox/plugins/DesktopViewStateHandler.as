@@ -35,8 +35,8 @@ package nodebox.plugins {
 		 */
 		public function getSupportedEvents():Array {
 			return [ { name: AppEvent.ON_APP_COMPLEETE, dispatcher: displayLogin },
+			         { name: AppEvent.ON_APP_DISCONNECT, dispatcher: displayLogin },
 			         { name: AppEvent.ON_APP_DISCONNECTED, dispatcher: displayLogin },
-					 { name: AppEvent.ON_APP_DISCONNECT, dispatcher: displayLogin },
 			         { name: AppEvent.ON_APP_CONNECTED, dispatcher: displayDesktop}];
 		}
 		
@@ -65,3 +65,4 @@ package nodebox.plugins {
 		}
 	}
 }
+

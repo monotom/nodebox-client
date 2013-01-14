@@ -33,6 +33,9 @@ package nodebox.app {
 			return model.getContentAsBinary(path);
 		}
 		
+		/**
+		 * Indicates if the file exists in he file system
+		 */
 		public function get exists():Boolean {
 			return model.isAvailable(path);
 		}

@@ -7,7 +7,8 @@ package m.io {
 	import flash.utils.ByteArray;
 	
 	/**
-	 * ...
+	 * This class handles file system access.
+	 * 
 	 * @author Tom Hanoldt
 	 */
 	public class LocalFileManager {
@@ -15,7 +16,7 @@ package m.io {
 		/** 
 		 * This method
 		 * 
-		 * @param e blalba
+		 * @param localStorageBase the base path this instance operates on.
 		 * 
 		 * @return void
 		 */
@@ -24,11 +25,11 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method builds a path relative to the base path.
 		 * 
-		 * @param e blalba
+		 * @param path relative path
 		 * 
-		 * @return void
+		 * @return absolute path
 		 */
 		public function buildPath(path:String):String {
 			return localStorageBase+'/'+path;
@@ -51,31 +52,31 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method returns a file reference inside the base path
 		 * 
-		 * @param e blalba
+		 * @param path relative path
 		 * 
-		 * @return void
+		 * @return the file reference
 		 */
 		public function getFileRefference(path:String):FileReference {
 			return getFile(path) as FileReference;
 		}
 		
 		/** 
-		 * This method
+		 * This method cheks if a file exists.
 		 * 
-		 * @param e blalba
+		 * @param path relative path
 		 * 
-		 * @return void
+		 * @return true if the file exists, false otherwise
 		 */
 		public function isAvailable(path:String):Boolean {
 			return getFile(path).exists;
 		}
 		
 		/** 
-		 * This method
+		 * This method creates a folder inside the base path
 		 * 
-		 * @param e blalba
+		 * @param path relative path
 		 * 
 		 * @return void
 		 */
@@ -84,9 +85,9 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method creates a file by writing an empty string to the file
 		 * 
-		 * @param e blalba
+		 * @param path relative path
 		 * 
 		 * @return void
 		 */
@@ -95,9 +96,10 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method writes a text into a file
 		 * 
-		 * @param e blalba
+		 * @param path relative path
+		 * @param data text to be written
 		 * 
 		 * @return void
 		 */
@@ -108,9 +110,10 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method writes binary data to a file
 		 * 
-		 * @param e blalba
+		 * @param path relative path
+		 * @param data binary data
 		 * 
 		 * @return void
 		 */
@@ -121,9 +124,10 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method writes a objoct into a file
 		 * 
-		 * @param e blalba
+		 * @param path relative path
+		 * @param data the object to be written
 		 * 
 		 * @return void
 		 */
@@ -160,9 +164,9 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method reads the content of a file and returns binary data
 		 * 
-		 * @param e blalba
+		 * @param pathr elative path
 		 * 
 		 * @return void
 		 */
@@ -176,9 +180,9 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method reads the content of a file and returns text
 		 * 
-		 * @param e blalba
+		 * @param path relative path
 		 * 
 		 * @return void
 		 */
@@ -191,9 +195,9 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method reads the content of a file and returns json decoded object
 		 * 
-		 * @param e blalba
+		 * @param path relative path
 		 * 
 		 * @return void
 		 */
@@ -201,10 +205,11 @@ package m.io {
 			return com.adobe.serialization.json.JSON.decode(getContentAsText(path));
 		}
        
-        /** 
-		 * This method
+       /** 
+		 * This method appends text to a text file
 		 * 
-		 * @param e blalba
+		 * @param path relative path
+		 * @param data text to append
 		 * 
 		 * @return void
 		 */
@@ -215,10 +220,11 @@ package m.io {
             fs.close();
         }
 		
-        /** 
-		 * This method
+          /** 
+		 * This method updates a text file
 		 * 
-		 * @param e blalba
+		 * @param path relative path
+		 * @param data text to be written
 		 * 
 		 * @return void
 		 */
@@ -231,9 +237,9 @@ package m.io {
         }
 		
 		/** 
-		 * This method
+		 * This method deletes a file
 		 * 
-		 * @param e blalba
+		 * @param path relative path
 		 * 
 		 * @return void
 		 */
@@ -248,14 +254,26 @@ package m.io {
 		}
 		
 		/** 
-		 * This method
+		 * This method returns the directory listening of the base path of this instance
 		 * 
-		 * @param e blalba
+		 * @param ignoreFiles file names that should not be included
 		 * 
 		 * @return void
 		 */
 		public function getRootDirectoryListening(ignoreFiles:Array = null):Array {
-			var file:File = getFile('');
+			return getDirectoryListening('', ignoreFiles);
+		}
+		
+		/** 
+		 * This method returns the directory listening of folder
+		 * 
+		 * @param path relative path
+		 * @param ignoreFiles file names that should not be included
+		 * 
+		 * @return void
+		 */
+		public function getDirectoryListening(path:String, ignoreFiles:Array = null):Array {
+			var file:File = getFile(path);
 			if (!file.exists || !file.isDirectory )
 				return [];
 			

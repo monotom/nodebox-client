@@ -1,5 +1,6 @@
 package nodebox.io.provider.nodebox 
 {
+	import com.adobe.serialization.json.JSON;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
@@ -7,12 +8,10 @@ package nodebox.io.provider.nodebox
 	import flash.net.URLLoader;
 	import flash.net.URLLoaderDataFormat;
 	import flash.net.URLRequest;
-	import flash.net.URLRequestHeader;
 	import flash.net.URLRequestMethod;
 	import flash.utils.ByteArray;
 	import m.app.AppEvent;
 	import mx.utils.URLUtil;
-	import com.adobe.serialization.json.JSON;
 	import nodebox.App;
 	import ru.inspirit.net.MultipartURLLoader;
  
@@ -258,20 +257,15 @@ package nodebox.io.provider.nodebox
 					
 				} else if (urlLoader.resultType == NODEBOX_FILE) {
 					resultObject = com.adobe.serialization.json.JSON.decode(urlLoader.data);
-				/*} else if (urlLoader.resultType == NODEBOX_FILE_LIST) {
-					App.instance.logger.info('getMetadata response: '+urlLoader.data);
-					var array:Array = new Array();
-					var resultArray:* = com.adobe.serialization.json.JSON.decode(urlLoader.data);
-					for each (var ro:Object in resultArray) {
-						var df:NodeboxFile = new NodeboxFile();
-						df.decode(ro);
-						array.push(df);
-					}
-					resultObject = array;*/
 				} else if (urlLoader.resultType == DELTA_INFO) {
 					resultObject = com.adobe.serialization.json.JSON.decode(urlLoader.data);
 				} else {
 					resultObject = urlLoader.data;
+					if (resultObject.hasOwnProperty('error')) {
+						App.instance.logger.error(resultObject.error);
+						this.dispatchNodeboxEvent(urlLoader.eventFaultType, evt, resultObject.error);
+						return;
+					}
 				}
 			} catch (e:Error) {
 				App.instance.logger.error(e.message);
@@ -324,26 +318,9 @@ package nodebox.io.provider.nodebox
 		}
 	}
 }
-
 import flash.net.URLLoader;
 
-	/**
- * Internal class. Extends flash.net.URLLoader, add 3 properties. 
- * 
- * @author yinzeshuo
- */
- 
-internal class NodeboxURLLoader extends URLLoader
-{
-	/**
-	 * define class type of result, can be REQUEST_TOKEN|ACCESS_TOKEN|ACCOUNT_INFO|NODEBOX_FILE.
-	 * 
-	 * REQUEST_TOKEN & ACCESS_TOKEN : set to DropboxConfig when type is requestToken & accessToken.
-	 * ACCOUNT_INFO : return an AccountInfo object
-	 * NODEBOX_FILE : return an DropboxFile object
-	 * NODEBOX_FILE_LIST : return an array of DropboxFile object
-	 * others : return response string.*/
-	 
+internal class NodeboxURLLoader extends URLLoader{	 
 	public var resultType:String;
 	
 	/**

@@ -26,9 +26,8 @@
 	</app>
 	<dataProviders>
 		<dropbox>
-			<basepath>TODO</basepath>
-			<appKey>INSERT</appKey>
-			<appSecret>INSERT</appSecret>
+			<appKey>5pagtowjbkctwhn</appKey>
+			<appSecret>5fh7x69399xysm1</appSecret>
 		</dropbox>
 		<nodebox>
 			<server>https://nodebox.privatedns.org</server>

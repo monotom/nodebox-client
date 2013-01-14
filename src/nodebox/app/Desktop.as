@@ -1,7 +1,6 @@
 package nodebox.app {
 	import flash.desktop.ClipboardFormats;
 	import flash.desktop.NativeDragManager;
-	import flash.display.NativeMenu;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.events.NativeDragEvent;
@@ -9,7 +8,6 @@ package nodebox.app {
 	import flash.geom.Point;
 	import flash.ui.ContextMenu;
 	import flash.ui.ContextMenuItem;
-	import m.app.AppEvent;
 	import mx.core.FlexGlobals;
 	import mx.events.DragEvent;
 	import nodebox.App;
@@ -97,29 +95,24 @@ package nodebox.app {
 				return ;
 				
 			items[desktopItem.item.path] = desktopItem;
-			
 			uiComponent.addElement(desktopItem);
 			
 			desktopItem.x = lastAddX + desktopItem.width;
-			lastAddX = lastAddX + desktopItem.width;
 			desktopItem.y = lastAddY + desktopItem.height;
+			lastAddX = lastAddX + desktopItem.width;
 			lastAddY =  lastAddY + desktopItem.height;
 			
 			config.loadConfigForItem(desktopItem);
-			//var b:MouseEvent;
-			//b.movementX
 			var mouseDownHandler:Function = function (e:MouseEvent):void{   			
 				NativeDragManager.doDrag(desktopItem, 
 					desktopItem.item.createClipboard(),
 					null,
 					new Point( -desktopItem.mouseX, -desktopItem.mouseY));
-			}
-			
-			desktopItem.contextMenu = getContextMenu(desktopItem);
-			
+			}			
 			desktopItem.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
             desktopItem.item.addEventListener(IOEvent.ON_FILE_SYNCING, function(e:IOEvent):void{ desktopItem.setStateIcon(Item.ITEM_STATE_SYNCING)});
 			desktopItem.item.addEventListener(IOEvent.ON_FILE_SYNCED, function(e:IOEvent):void { desktopItem.setStateIcon(Item.ITEM_STATE_SYNCED) } );
+			desktopItem.contextMenu = getContextMenu(desktopItem);			
 		}
 				
 		/** 
@@ -155,7 +148,6 @@ package nodebox.app {
 			if(!event.clipboard.hasFormat(ClipboardFormats.FILE_LIST_FORMAT))			
 				return ;
 			
-			App.instance.logger.info("file drop in:"+event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT));
 			try{
 				var dropfiles:Array = event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
 				
@@ -166,7 +158,7 @@ package nodebox.app {
 				handleFileDropIn(dropfiles);
 			}					
 			catch(e:Error){
-				App.instance.logger.info("ioerror:"+e.getStackTrace());
+				App.instance.logger.error("ioerror:"+e.getStackTrace());
 			}			
 		}
 		
@@ -248,6 +240,9 @@ package nodebox.app {
 			return contextMenu;
 		}
 		
+		/**
+		 * Reset the Desktop
+		 */
 		public function clean(e:Event = null):void {
 			uiComponent.removeAllElements();
 			config = new DesktopConfig();

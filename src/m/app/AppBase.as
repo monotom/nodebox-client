@@ -40,10 +40,10 @@ package m.app{
 			AppConfig.loadXml(AppConfig.configXml.url, bootstrapAfterConfigLoaded);
 		}
 		
-		protected var updater:Updater;
 		/** 
 		 * This method sets up the application updater
 		 */
+		protected var updater:Updater;
 		protected function setupUpdater():void {
 			updater = new Updater(AppConfig.xml.app.updater.url);
 			logger.info('checking for update: '+AppConfig.xml.app.updater.url);

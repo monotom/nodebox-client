@@ -53,9 +53,9 @@ package m.app
 		 * @param msg The Message to log.
 		 */
 		public function info(msg:String):void {
-			if (logLevel & LOG_LEVEL_INFO)     logger.info('INFO: ' + msg);
-			if (logLevel & TRACE_ALL)     trace('INFO: ' + msg);	
-			if (callback != null) callback('INFO: ' + msg);
+			if (logLevel & LOG_LEVEL_INFO) logger.info('INFO: ' + msg);
+			if (logLevel & TRACE_ALL)      trace('INFO: ' + msg);	
+			if (callback != null) 		   callback('INFO: ' + msg);
 		}
 		
 		/** 
